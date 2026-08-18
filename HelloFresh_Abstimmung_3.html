@@ -118,7 +118,7 @@
 </head>
 <body>
 <header class="top">
-  <p class="eyebrow">Wochenmenü · Gemeinsame Abstimmung</p>
+  <p class="eyebrow">Wochen · Gemeinsame Abstimmung</p>
   <h1>HelloFresh Abstimmung</h1>
   <p class="sub">4 Wochen im Voraus · <span id="weekName">–</span></p>
   <div class="syncpill" id="syncpill"><span class="dot"></span><span id="synctext">Nicht verbunden</span></div>
@@ -181,19 +181,19 @@
 
 <footer>
   <span id="footNote"></span>
-  Menü ausgelesen von <a href="https://www.hellofresh.de/menus" target="_blank" rel="noopener">hellofresh.de/menus</a> am 18.08.2026.
+   ausgelesen von <a href="https://www.hellofresh.de/s" target="_blank" rel="noopener">hellofresh.de/s</a> am 18.08.2026.
   · <button class="link" id="editConn">Verbindung ändern</button>
   · <button class="link" id="resetWeek">Diese Woche zurücksetzen</button>
 </footer>
 
 <script>
-let WEEKS = [];   // wird aus menu.json geladen – KEIN eingebauter Fallback
+let WEEKS = [];   // wird aus .json geladen – KEIN eingebauter Fallback
 let TAGS = [];
 // === Datenquelle für die Wochen ===
-// Trage hier deinen GitHub-Raw-Link zur menu.json ein (siehe Anleitung).
-// Beispiel: https://raw.githubusercontent.com/DEINNAME/DEINREPO/main/menu.json
-// Liegt die menu.json direkt neben dieser HTML (gleicher Ordner), kann auch einfach 'menu.json' stehen bleiben.
-const MENU_URL = "menu.json";  // <-- HIER deinen raw.githubusercontent.com-Link eintragen (oder 'menu.json' lassen)
+// Trage hier deinen GitHub-Raw-Link zur .json ein (siehe Anleitung).
+// Beispiel: https://raw.githubusercontent.com/DEINNAME/DEINREPO/main/.json
+// Liegt die .json direkt neben dieser HTML (gleicher Ordner), kann auch einfach '.json' stehen bleiben.
+const _URL = "https://leonkonetzko.github.io/hellofresh-abstimmung/HelloFresh_Abstimmung.html";  // <-- HIER deinen raw.githubusercontent.com-Link eintragen (oder 'menu.json' lassen)
 
 async function loadExternalMenu(){
   const candidates = [];
