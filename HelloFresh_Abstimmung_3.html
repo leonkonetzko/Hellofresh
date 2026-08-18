@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HelloFresh Abstimmung · 4 Wochen</title>
+<style>
+  :root{
+    --ink:#1f1a17;--paper:#faf6f0;--card:#fff;--line:#e7ded3;
+    --accent:#4a7c59;--accent-deep:#2f5138;--hot:#c24522;--muted:#8a7f74;
+    --shadow:0 1px 2px rgba(31,26,23,.06),0 8px 24px rgba(31,26,23,.07);--gold:#c9a24a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;line-height:1.5}
+  header.top{padding:28px 22px 12px;max-width:1180px;margin:0 auto}
+  .eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-deep);font-weight:700;margin:0 0 6px}
+  h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(26px,5vw,42px);line-height:1.05;margin:0 0 6px;font-weight:700;letter-spacing:-.01em}
+  .sub{color:var(--muted);margin:0;font-size:15px}
+  .syncpill{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;padding:5px 11px;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--muted);margin-top:10px}
+  .syncpill .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+  .syncpill.ok .dot{background:var(--accent)}
+  .syncpill.err .dot{background:var(--hot)}
+  .syncpill.local .dot{background:var(--gold)}
+
+  /* week switcher */
+  .weeks{display:flex;gap:8px;flex-wrap:wrap;max-width:1180px;margin:16px auto 0;padding:0 22px}
+  .week-tab{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px 16px;cursor:pointer;
+    transition:all .12s ease;text-align:left;min-width:120px}
+  .week-tab .wk-label{font-weight:700;font-size:14px;display:block}
+  .week-tab .wk-sub{font-size:12px;color:var(--muted);margin-top:2px}
+  .week-tab[aria-selected=true]{border-color:var(--accent);box-shadow:0 0 0 2px rgba(74,124,89,.18);background:#f3f7f4}
+
+  .setup{max-width:760px;margin:20px auto;padding:0 22px}
+  .setup-box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;box-shadow:var(--shadow)}
+  .setup-box h2{font-family:Georgia,serif;font-size:20px;margin:0 0 6px}
+  .setup-box p{margin:0 0 14px;color:var(--muted);font-size:14px}
+  .setup-box ol{margin:0 0 16px;padding-left:20px;font-size:14px;line-height:1.7}
+  .setup-box code{background:#f0ede6;padding:1px 5px;border-radius:4px;font-size:13px}
+  .field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+  .field label{font-size:13px;font-weight:600}
+  .field input{padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit}
+  .field input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+  .row-btns{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .msg{font-size:13px;margin-top:10px}
+  .msg.ok{color:var(--accent-deep)}.msg.err{color:var(--hot)}
+
+  .voters{display:flex;gap:8px;flex-wrap:wrap;max-width:1180px;margin:14px auto 0;padding:0 22px}
+  .voter-tab{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px;font-size:14px;cursor:pointer;transition:all .12s ease}
+  .voter-tab .dot{width:9px;height:9px;border-radius:50%;background:var(--line)}
+  .voter-tab.done .dot{background:var(--accent)}
+  .voter-tab[aria-selected=true]{border-color:var(--accent);box-shadow:0 0 0 2px rgba(74,124,89,.18)}
+  .voter-name-input{border:none;background:transparent;font:inherit;width:9ch;color:var(--ink)}
+  .voter-name-input:focus{outline:none;border-bottom:1px dashed var(--accent)}
+  .voter-tab .cnt{color:var(--muted);font-size:12px}
+
+  .controls{position:sticky;top:0;z-index:20;background:rgba(250,246,240,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 22px;margin-top:14px}
+  .controls-inner{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+  .searchrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  input[type=search]{flex:1;min-width:180px;padding:11px 14px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:var(--card);color:var(--ink)}
+  input[type=search]:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+  .count{font-size:13px;color:var(--muted);white-space:nowrap}
+  .btn{border:1px solid var(--accent);background:var(--accent);color:#fff;font:inherit;font-weight:600;padding:10px 18px;border-radius:10px;cursor:pointer;transition:all .12s ease;white-space:nowrap}
+  .btn:hover{background:var(--accent-deep);border-color:var(--accent-deep)}
+  .btn.ghost{background:var(--card);color:var(--accent-deep)}
+  .btn.ghost:hover{background:#f0ede6}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .chips{display:flex;gap:7px;flex-wrap:wrap}
+  .chip{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:6px 12px;border-radius:999px;font-size:13px;cursor:pointer;transition:all .12s ease}
+  .chip:hover{border-color:var(--accent)}
+  .chip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  main{max-width:1180px;margin:0 auto;padding:20px 22px 40px}
+  .hint{color:var(--muted);font-size:14px;margin:0 0 16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}
+  .card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;cursor:pointer;transition:transform .1s ease,box-shadow .1s ease}
+  .card:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(31,26,23,.1),0 14px 30px rgba(31,26,23,.09)}
+  .card.picked{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent),var(--shadow)}
+  .card:focus-visible{outline:3px solid var(--accent-deep);outline-offset:2px}
+  .thumb{position:relative;aspect-ratio:3/2;background:#efe8df;overflow:hidden}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .badge{position:absolute;top:10px;left:10px;background:var(--hot);color:#fff;font-size:11px;font-weight:700;letter-spacing:.03em;padding:4px 9px;border-radius:6px;text-transform:uppercase}
+  .check{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.85);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;transition:all .12s ease}
+  .card.picked .check{background:var(--accent);border-color:var(--accent)}
+  .check svg{width:16px;height:16px;stroke:#fff;stroke-width:3;fill:none;opacity:0}
+  .card.picked .check svg{opacity:1}
+  .body{padding:13px 15px 15px;display:flex;flex-direction:column;gap:6px;flex:1}
+  .title{font-weight:600;font-size:15px;line-height:1.3}
+  .desc{font-size:12.5px;color:var(--muted);line-height:1.35}
+  .meta{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-top:auto;padding-top:4px}
+  .time{font-weight:600;color:var(--accent-deep)}
+  .tagline{display:flex;gap:6px;flex-wrap:wrap}
+  .tag{font-size:11px;background:#f0ede6;color:#6a6055;padding:3px 8px;border-radius:6px}
+  .empty{text-align:center;color:var(--muted);padding:60px 20px;font-size:16px}
+
+  .results-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+  h2.res{font-family:Georgia,serif;font-size:26px;margin:0}
+  .res-row{display:grid;grid-template-columns:56px 1fr auto;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+  .res-thumb{width:56px;height:44px;border-radius:8px;object-fit:cover;background:#efe8df}
+  .res-main{min-width:0}
+  .res-title{font-weight:600;font-size:15px;line-height:1.25}
+  .res-bar-wrap{margin-top:6px;height:9px;background:#efe8df;border-radius:6px;overflow:hidden;max-width:340px}
+  .res-bar{height:100%;background:var(--accent);border-radius:6px}
+  .res-votes{display:flex;align-items:center;gap:10px}
+  .res-count{font-weight:700;color:var(--accent-deep);font-size:18px;min-width:2ch;text-align:right}
+  .res-who{font-size:12px;color:var(--muted)}
+  .crown{color:var(--gold)}
+  .res-row.top .res-title{color:var(--accent-deep)}
+  .zero{color:var(--muted);font-size:14px;margin-top:14px}
+
+  footer{max-width:1180px;margin:0 auto;padding:24px 22px 50px;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
+  footer a{color:var(--accent-deep)}
+  footer button.link{background:none;border:none;color:var(--accent-deep);cursor:pointer;font:inherit;text-decoration:underline;padding:0}
+  .hidden{display:none!important}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  @media (max-width:520px){.res-row{grid-template-columns:44px 1fr auto;gap:10px}.res-thumb{width:44px;height:36px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <p class="eyebrow">Wochenmenü · Gemeinsame Abstimmung</p>
+  <h1>HelloFresh Abstimmung</h1>
+  <p class="sub">4 Wochen im Voraus · <span id="weekName">–</span></p>
+  <div class="syncpill" id="syncpill"><span class="dot"></span><span id="synctext">Nicht verbunden</span></div>
+</header>
+
+<div class="weeks" id="weeks" role="tablist" aria-label="Woche wählen"></div>
+
+<div class="setup" id="setup">
+  <div class="setup-box">
+    <h2>Einmalige Einrichtung: gemeinsamer Speicher</h2>
+    <p>Damit alle 4 Personen von ihren eigenen Geräten abstimmen und die Stimmen zusammenlaufen, wird ein kostenloser Cloud-Speicher (JSONBin.io) genutzt. Einmal einrichten – gilt dann für alle 4 Wochen.</p>
+    <ol>
+      <li>Auf <code>jsonbin.io</code> kostenlos registrieren.</li>
+      <li>Unter <strong>API Keys</strong> einen <strong>Access Key</strong> mit den Rechten <code>read</code> + <code>update</code> anlegen (nicht den Master Key verwenden).</li>
+      <li>Einen <strong>Bin</strong> anlegen (Inhalt <code>{}</code> genügt) und dessen <strong>BIN ID</strong> kopieren.</li>
+      <li>Beide Werte eintragen und auf „Verbinden“ klicken.</li>
+    </ol>
+    <div class="field"><label for="binId">Bin ID</label><input id="binId" type="text" placeholder="z.B. 6712ab...c4" autocomplete="off"></div>
+    <div class="field"><label for="accessKey">Access Key (read + update)</label><input id="accessKey" type="text" placeholder="$2a$10$..." autocomplete="off"></div>
+    <div class="row-btns">
+      <button class="btn" id="connectBtn">Verbinden</button>
+      <button class="btn ghost" id="localBtn">Ohne Cloud fortfahren (nur dieses Gerät)</button>
+    </div>
+    <div class="msg" id="setupMsg"></div>
+  </div>
+</div>
+
+<div class="voters hidden" id="voters" role="tablist" aria-label="Personen"></div>
+
+<div class="controls hidden" id="voteControls">
+  <div class="controls-inner">
+    <div class="searchrow">
+      <input type="search" id="q" placeholder="Gericht suchen …" autocomplete="off" aria-label="Gericht suchen">
+      <span class="count" id="count"></span>
+      <button class="btn" id="toResults">Auswertung →</button>
+    </div>
+    <div class="chips" id="chips" role="group" aria-label="Nach Tag filtern"></div>
+  </div>
+</div>
+
+<main class="hidden" id="appMain">
+  <div id="voteView">
+    <p class="hint" id="voteHint"></p>
+    <div class="grid" id="grid"></div>
+    <div class="empty hidden" id="empty">Keine Gerichte gefunden.</div>
+  </div>
+  <div id="resultView" class="hidden">
+    <div class="results-head">
+      <h2 class="res">Auswertung <span id="resWeek" style="font-size:16px;color:var(--muted)"></span></h2>
+      <div class="row-btns">
+        <button class="btn ghost" id="refreshRes">↻ Aktualisieren</button>
+        <button class="btn ghost" id="backToVote">← Zur Auswahl</button>
+      </div>
+    </div>
+    <p class="hint" id="resultSummary"></p>
+    <div id="resultList"></div>
+    <p class="zero" id="zeroNote"></p>
+  </div>
+</main>
+
+<footer>
+  <span id="footNote"></span>
+  Menü ausgelesen von <a href="https://www.hellofresh.de/menus" target="_blank" rel="noopener">hellofresh.de/menus</a> am 18.08.2026.
+  · <button class="link" id="editConn">Verbindung ändern</button>
+  · <button class="link" id="resetWeek">Diese Woche zurücksetzen</button>
+</footer>
+
+<script>
+let WEEKS = [];   // wird aus menu.json geladen – KEIN eingebauter Fallback
+let TAGS = [];
+// === Datenquelle für die Wochen ===
+// Trage hier deinen GitHub-Raw-Link zur menu.json ein (siehe Anleitung).
+// Beispiel: https://raw.githubusercontent.com/DEINNAME/DEINREPO/main/menu.json
+// Liegt die menu.json direkt neben dieser HTML (gleicher Ordner), kann auch einfach 'menu.json' stehen bleiben.
+const MENU_URL = "menu.json";  // <-- HIER deinen raw.githubusercontent.com-Link eintragen (oder 'menu.json' lassen)
+
+async function loadExternalMenu(){
+  const candidates = [];
+  if(MENU_URL && MENU_URL !== "menu.json") candidates.push(MENU_URL + (MENU_URL.indexOf('?')>=0?'&':'?') + 'v=' + Date.now());
+  candidates.push('menu.json?v=' + Date.now());  // Datei im selben Ordner
+  let lastErr = "";
+  for(const url of candidates){
+    try{
+      const res = await fetch(url, {cache:'no-store'});
+      if(!res.ok){ lastErr = "HTTP " + res.status + " bei " + url; continue; }
+      const j = await res.json();
+      const wk = Array.isArray(j) ? j : j.weeks;
+      if(Array.isArray(wk) && wk.length){
+        WEEKS = wk;
+        const s=[];WEEKS.forEach(w=>(w.dishes||[]).forEach(d=>(d.tags||[]).forEach(t=>{if(s.indexOf(t)<0)s.push(t);})));
+        TAGS = s;
+        return true; // erfolgreich geladen
+      }
+      lastErr = "Datei geladen, aber keine Wochen darin gefunden (" + url + ")";
+    }catch(e){ lastErr = e.message + " bei " + url; }
+  }
+  window.__menuLoadError = lastErr || "Unbekannter Fehler beim Laden der Menüdaten.";
+  return false;
+}
+function showLoadError(){
+  document.body.innerHTML =
+    '<div style="max-width:640px;margin:60px auto;padding:0 22px;font-family:\'Segoe UI\',system-ui,sans-serif;color:#1f1a17">'
+    + '<h1 style="font-family:Georgia,serif;color:#c24522">Menü konnte nicht geladen werden</h1>'
+    + '<p style="font-size:16px;line-height:1.6">Die aktuellen Wochen (<code>menu.json</code>) konnten nicht abgerufen werden. '
+    + 'Das passiert, wenn die Datendatei fehlt, noch nicht veröffentlicht wurde oder der Link nicht stimmt.</p>'
+    + '<p style="font-size:14px;color:#8a7f74">Technischer Hinweis: ' + (window.__menuLoadError||'') + '</p>'
+    + '<p style="font-size:15px;line-height:1.6">Bitte später erneut versuchen oder sicherstellen, dass die <code>menu.json</code> am hinterlegten Ort liegt.</p>'
+    + '<button onclick="location.reload()" style="border:1px solid #4a7c59;background:#4a7c59;color:#fff;font:inherit;font-weight:600;padding:10px 18px;border-radius:10px;cursor:pointer">Erneut versuchen</button>'
+    + '</div>';
+}
+const NAMES = ["Leon","Papa","Celine","Mama"];
+const NUM_VOTERS = 4;
+
+// ---- config ----
+const CFG_KEY="hf-vote-cfg";
+let cfg=null; try{const r=localStorage.getItem(CFG_KEY); if(r) cfg=JSON.parse(r);}catch(e){}
+let localOnly=false;
+
+// ---- state ----
+let curWeek=0;      // index into WEEKS
+let active=0;       // voter index
+let activeTags=new Set();
+let saveTimer=null;
+// voters per week: { [weekId]: [{name,picks:[]}] }
+let store={};
+function blankVoters(){return NAMES.map(n=>({name:n,picks:[]}));}
+function votersFor(wid){ if(!store[wid]) store[wid]=blankVoters(); return store[wid]; }
+
+const el=id=>document.getElementById(id);
+const setup=el('setup'),weeksEl=el('weeks'),votersEl=el('voters'),voteControls=el('voteControls'),appMain=el('appMain');
+const grid=el('grid'),chipsEl=el('chips'),qEl=el('q'),countEl=el('count'),emptyEl=el('empty');
+const voteHint=el('voteHint'),voteView=el('voteView'),resultView=el('resultView');
+const syncpill=el('syncpill'),synctext=el('synctext');
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function dishes(){return WEEKS[curWeek].dishes;}
+function curVoters(){return votersFor(WEEKS[curWeek].id);}
+function curPicks(){return curVoters()[active].picks;}
+function setSync(k,t){syncpill.className='syncpill'+(k?(' '+k):'');synctext.textContent=t;}
+
+// ---- JSONBin ----
+const API="https://api.jsonbin.io/v3/b/";
+async function cloudRead(){
+  const res=await fetch(API+cfg.binId+"/latest",{headers:{"X-Access-Key":cfg.accessKey}});
+  if(!res.ok) throw new Error("Lesen fehlgeschlagen ("+res.status+")");
+  return (await res.json()).record;
+}
+async function cloudWrite(payload){
+  const res=await fetch(API+cfg.binId,{method:"PUT",headers:{"Content-Type":"application/json","X-Access-Key":cfg.accessKey},body:JSON.stringify(payload)});
+  if(!res.ok) throw new Error("Speichern fehlgeschlagen ("+res.status+")");
+  return true;
+}
+// record shape: { store: { W35:[...], W36:[...] } }
+function normalize(rec){
+  if(rec&&rec.store&&typeof rec.store==='object') return rec.store;
+  return null;
+}
+async function pullRemote(){
+  try{
+    const rec=await cloudRead();
+    const remote=normalize(rec);
+    if(remote){
+      // adopt remote store, ensuring shape per known week
+      WEEKS.forEach(w=>{
+        const rv=remote[w.id];
+        if(Array.isArray(rv)&&rv.length===NUM_VOTERS){
+          store[w.id]=rv.map((v,i)=>({name:v.name||NAMES[i],picks:Array.isArray(v.picks)?v.picks:[]}));
+        }
+      });
+    }else{
+      await cloudWrite({store});
+    }
+    setSync('ok','Verbunden · Stimmen werden geteilt');
+  }catch(e){setSync('err','Cloud-Fehler: '+e.message);throw e;}
+}
+async function pushRemote(){
+  if(localOnly||!cfg){saveLocal();return;}
+  try{
+    const rec=await cloudRead();
+    const remote=normalize(rec)||{};
+    // merge: remote is base, overwrite ONLY current week's current voter with local
+    const wid=WEEKS[curWeek].id;
+    const base = remote[wid] && remote[wid].length===NUM_VOTERS ? remote[wid] : blankVoters();
+    const merged = base.map((rv,i)=> i===active ? {name:curVoters()[active].name,picks:curVoters()[active].picks} : rv);
+    remote[wid]=merged;
+    // also make sure other weeks we hold locally are preserved if remote missing them
+    WEEKS.forEach(w=>{ if(!remote[w.id]&&store[w.id]) remote[w.id]=store[w.id]; });
+    await cloudWrite({store:remote});
+    // reflect merged back locally
+    store[wid]=merged;
+    renderVoters();
+    setSync('ok','Gespeichert · '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}));
+  }catch(e){setSync('err','Nicht gespeichert: '+e.message);}
+}
+function scheduleSave(){ if(localOnly||!cfg){saveLocal();return;} setSync('','Speichern …'); clearTimeout(saveTimer); saveTimer=setTimeout(pushRemote,600); }
+
+// ---- local fallback ----
+const LKEY="hf-vote-store-v2";
+function saveLocal(){try{localStorage.setItem(LKEY,JSON.stringify(store));}catch(e){}}
+function loadLocal(){try{const r=localStorage.getItem(LKEY);if(r){const s=JSON.parse(r);if(s&&typeof s==='object')store=s;}}catch(e){}}
+
+// ---- week switcher ----
+function renderWeeks(){
+  weeksEl.innerHTML='';
+  WEEKS.forEach((w,i)=>{
+    const b=document.createElement('button');
+    b.className='week-tab';b.setAttribute('role','tab');b.setAttribute('aria-selected',i===curWeek?'true':'false');
+    b.innerHTML=`<span class="wk-label">${esc(w.label)}</span><span class="wk-sub">${w.dishes.length} Gerichte</span>`;
+    b.addEventListener('click',()=>{curWeek=i;active=0;activeTags.clear();qEl.value='';renderWeeks();renderChips();renderVoters();updateHint();render();backToVote();el('weekName').textContent=w.full;});
+    weeksEl.appendChild(b);
+  });
+  el('weekName').textContent=WEEKS[curWeek].full;
+}
+
+// ---- voter tabs ----
+function renderVoters(){
+  votersEl.innerHTML='';
+  curVoters().forEach((v,i)=>{
+    const tab=document.createElement('div');
+    tab.className='voter-tab'+(v.picks.length?' done':'');
+    tab.setAttribute('role','tab');tab.setAttribute('aria-selected',i===active?'true':'false');
+    tab.innerHTML='<span class="dot"></span>';
+    const name=document.createElement('input');
+    name.className='voter-name-input';name.value=v.name;name.setAttribute('aria-label','Name Person '+(i+1));
+    name.addEventListener('click',e=>e.stopPropagation());
+    name.addEventListener('input',()=>{v.name=name.value||NAMES[i];scheduleSave();});
+    tab.appendChild(name);
+    const cnt=document.createElement('span');cnt.className='cnt';cnt.textContent='· '+v.picks.length;tab.appendChild(cnt);
+    tab.addEventListener('click',()=>{active=i;renderVoters();render();updateHint();});
+    votersEl.appendChild(tab);
+  });
+}
+function updateHint(){const v=curVoters()[active];voteHint.textContent=v.name+' wählt gerade — tippe deine Wunschgerichte an. Ausgewählt: '+v.picks.length+'.';}
+
+// ---- chips ----
+function renderChips(){
+  chipsEl.innerHTML='';
+  TAGS.forEach(t=>{
+    const b=document.createElement('button');b.className='chip';b.textContent=t;b.setAttribute('aria-pressed',activeTags.has(t)?'true':'false');
+    b.addEventListener('click',()=>{activeTags.has(t)?(activeTags.delete(t),b.setAttribute('aria-pressed','false')):(activeTags.add(t),b.setAttribute('aria-pressed','true'));render();});
+    chipsEl.appendChild(b);
+  });
+}
+
+// ---- grid ----
+function cardHtml(d,idx,picked){
+  const badge=d.label?'<span class="badge">'+esc(d.label)+'</span>':'';
+  const tags=d.tags.map(t=>'<span class="tag">'+esc(t)+'</span>').join('');
+  const desc=d.desc?'<div class="desc">'+esc(d.desc)+'</div>':'';
+  return '<article class="card'+(picked?' picked':'')+'" tabindex="0" role="button" aria-pressed="'+picked+'" data-idx="'+idx+'" aria-label="'+esc(d.title)+' auswählen">'
+    +'<div class="thumb">'+badge+'<img loading="lazy" src="'+d.img+'" alt="'+esc(d.title)+'">'
+    +'<span class="check"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></span></div>'
+    +'<div class="body"><div class="title">'+esc(d.title)+'</div>'+desc+'<div class="tagline">'+tags+'</div>'
+    +'<div class="meta"><span class="time">'+esc(d.time)+'</span></div></div></article>';
+}
+function render(){
+  const q=qEl.value.trim().toLowerCase();const picks=curPicks();let shown=0;
+  grid.innerHTML=dishes().map((d,idx)=>{
+    const mQ=!q||d.title.toLowerCase().includes(q)||(d.desc||'').toLowerCase().includes(q);
+    const mT=activeTags.size===0||[...activeTags].every(t=>d.tags.includes(t));
+    if(!(mQ&&mT))return'';shown++;return cardHtml(d,idx,picks.includes(idx));
+  }).join('');
+  emptyEl.classList.toggle('hidden',shown>0);
+  countEl.textContent=shown===dishes().length?('Alle '+dishes().length):(shown+' von '+dishes().length);
+}
+function togglePick(idx){
+  const picks=curPicks();const pos=picks.indexOf(idx);
+  if(pos>=0)picks.splice(pos,1);else picks.push(idx);
+  const card=grid.querySelector('.card[data-idx="'+idx+'"]');
+  if(card){const on=picks.includes(idx);card.classList.toggle('picked',on);card.setAttribute('aria-pressed',on);}
+  renderVoters();updateHint();scheduleSave();
+}
+grid.addEventListener('click',e=>{const c=e.target.closest('.card');if(!c)return;togglePick(Number(c.dataset.idx));});
+grid.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;const c=e.target.closest('.card');if(!c)return;e.preventDefault();togglePick(Number(c.dataset.idx));});
+qEl.addEventListener('input',render);
+
+// ---- results ----
+async function showResults(){
+  if(!localOnly&&cfg){setSync('','Lade aktuelle Stimmen …');try{await pullRemote();renderVoters();}catch(e){}}
+  const V=curVoters();
+  const tally=dishes().map((d,idx)=>{const who=V.filter(v=>v.picks.includes(idx)).map(v=>v.name);return {d,idx,count:who.length,voters:who};});
+  const maxV=Math.max(1,...tally.map(t=>t.count));
+  const withV=tally.filter(t=>t.count>0).sort((a,b)=>b.count-a.count||a.d.title.localeCompare(b.d.title));
+  const top=withV.length?withV[0].count:0;
+  const voted=V.filter(v=>v.picks.length>0).length;
+  el('resWeek').textContent='· '+WEEKS[curWeek].label;
+  el('resultSummary').textContent=voted+' von 4 Personen haben abgestimmt · '+withV.length+' Gerichte mit mindestens einer Stimme.';
+  el('resultList').innerHTML=withV.map(t=>{
+    const isTop=t.count===top&&top>0;const pct=Math.round(t.count/maxV*100);
+    const crown=isTop?' <span class="crown" title="meiste Stimmen">♛</span>':'';
+    return '<div class="res-row'+(isTop?' top':'')+'"><img class="res-thumb" src="'+t.d.img+'" alt="'+esc(t.d.title)+'" loading="lazy">'
+      +'<div class="res-main"><div class="res-title">'+esc(t.d.title)+crown+'</div>'
+      +'<div class="res-bar-wrap"><div class="res-bar" style="width:'+pct+'%"></div></div>'
+      +'<div class="res-who">'+esc(t.voters.join(', '))+'</div></div>'
+      +'<div class="res-votes"><span class="res-count">'+t.count+'</span></div></div>';
+  }).join('');
+  const zero=tally.filter(t=>t.count===0).length;
+  el('zeroNote').textContent=zero?(zero+' Gerichte haben keine Stimme bekommen.'):'';
+  voteView.classList.add('hidden');voteControls.classList.add('hidden');votersEl.classList.add('hidden');weeksEl.classList.add('hidden');
+  resultView.classList.remove('hidden');window.scrollTo(0,0);
+}
+function backToVote(){
+  resultView.classList.add('hidden');voteView.classList.remove('hidden');
+  voteControls.classList.remove('hidden');votersEl.classList.remove('hidden');weeksEl.classList.remove('hidden');
+}
+el('toResults').addEventListener('click',showResults);
+el('refreshRes').addEventListener('click',showResults);
+el('backToVote').addEventListener('click',backToVote);
+
+// ---- start ----
+function startApp(){
+  setup.classList.add('hidden');weeksEl.classList.remove('hidden');votersEl.classList.remove('hidden');
+  voteControls.classList.remove('hidden');appMain.classList.remove('hidden');
+  el('footNote').textContent=(localOnly||!cfg)?'Hinweis: „Nur dieses Gerät“ – Stimmen werden lokal gespeichert und NICHT geteilt. ':'Alle Stimmen werden zentral geteilt, jeder kann vom eigenen Gerät abstimmen. ';
+  renderWeeks();renderChips();renderVoters();updateHint();render();
+}
+async function connect(binId,accessKey){
+  cfg={binId:binId.trim(),accessKey:accessKey.trim()};localOnly=false;setSync('','Verbinde …');
+  await pullRemote();localStorage.setItem(CFG_KEY,JSON.stringify(cfg));startApp();
+}
+el('connectBtn').addEventListener('click',async()=>{
+  const b=el('binId').value.trim(),k=el('accessKey').value.trim();const msg=el('setupMsg');msg.className='msg';msg.textContent='';
+  if(!b||!k){msg.className='msg err';msg.textContent='Bitte Bin ID und Access Key eintragen.';return;}
+  el('connectBtn').disabled=true;
+  try{await connect(b,k);msg.className='msg ok';msg.textContent='Verbunden!';}
+  catch(e){msg.className='msg err';msg.textContent='Fehlgeschlagen: '+e.message+' — Werte prüfen (Access Key braucht read + update).';cfg=null;}
+  finally{el('connectBtn').disabled=false;}
+});
+el('localBtn').addEventListener('click',()=>{localOnly=true;cfg=null;loadLocal();setSync('local','Nur dieses Gerät');startApp();});
+el('editConn').addEventListener('click',()=>{appMain.classList.add('hidden');weeksEl.classList.add('hidden');votersEl.classList.add('hidden');voteControls.classList.add('hidden');setup.classList.remove('hidden');if(cfg){el('binId').value=cfg.binId;el('accessKey').value=cfg.accessKey;}window.scrollTo(0,0);});
+el('resetWeek').addEventListener('click',async()=>{
+  if(!confirm('Alle Stimmen für die Woche '+WEEKS[curWeek].label+' löschen?'))return;
+  store[WEEKS[curWeek].id]=blankVoters();active=0;
+  if(localOnly||!cfg){saveLocal();}else{try{const rec=await cloudRead();const remote=normalize(rec)||{};remote[WEEKS[curWeek].id]=blankVoters();await cloudWrite({store:remote});setSync('ok','Zurückgesetzt');}catch(e){setSync('err',e.message);}}
+  renderVoters();updateHint();backToVote();render();
+});
+
+async function init(){
+  if(cfg&&cfg.binId&&cfg.accessKey){setSync('','Verbinde …');try{await pullRemote();startApp();}
+    catch(e){setup.classList.remove('hidden');el('binId').value=cfg.binId;el('accessKey').value=cfg.accessKey;el('setupMsg').className='msg err';el('setupMsg').textContent='Automatische Verbindung fehlgeschlagen — bitte erneut verbinden.';}}
+  else{setSync('','Noch nicht eingerichtet');}
+}
+(async function boot(){ const ok = await loadExternalMenu(); if(!ok){ showLoadError(); return; } await init(); })();
+
+// live refresh of other voters every 20s while voting
+setInterval(async()=>{
+  if(localOnly||!cfg||!resultView.classList.contains('hidden'))return;
+  try{const rec=await cloudRead();const remote=normalize(rec);if(remote){
+    const wid=WEEKS[curWeek].id;const rv=remote[wid];
+    if(Array.isArray(rv)&&rv.length===NUM_VOTERS){rv.forEach((v,i)=>{if(i!==active)curVoters()[i]={name:v.name||NAMES[i],picks:Array.isArray(v.picks)?v.picks:[]};});renderVoters();}
+  }}catch(e){}
+},20000);
+</script>
+</body>
+</html>
